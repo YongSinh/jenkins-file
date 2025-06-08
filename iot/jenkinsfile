@@ -66,15 +66,15 @@
                         def mavenOutput = sh(script: """
                             cd ${projectDir}
                             echo "Building project: ${projectDir}"
-                            mvn -f pom.xml clean package spring-boot:build-image -DskipTests=true
+                            mvn -f pom.xml clean package 
                         """, returnStdout: true).trim()
+                        // spring-boot:build-image -DskipTests=true
+                        // // Extract Docker image name from Maven output
+                        // def imageName = (mavenOutput =~ /Successfully built image '([^']+)'/)[0][1]
+                        // echo "Built Docker image: ${imageName}"
 
-                        // Extract Docker image name from Maven output
-                        def imageName = (mavenOutput =~ /Successfully built image '([^']+)'/)[0][1]
-                        echo "Built Docker image: ${imageName}"
-
-                        // Store the image name in an environment variable for later use
-                        env.DOCKER_IMAGE = imageName
+                        // // Store the image name in an environment variable for later use
+                        // env.DOCKER_IMAGE = imageName
                     }
                 }
             }
