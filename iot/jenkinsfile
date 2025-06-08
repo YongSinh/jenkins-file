@@ -42,9 +42,28 @@
                 }
             }
             stage('Build Project') {
-                steps {
+                               steps {
                     script {
-                          echo "✅ step build for project: ${params.PROJECT}"
+                        def projectDir = "${params.PROJECT}"
+                        def pomFile = "${projectDir}/pom.xml"
+                        
+                        if (!fileExists(pomFile)) {
+                            error "POM file not found at '${pomFile}'. Please check the repository structure."
+                        }
+                        
+                        // Capture Maven output
+                        def mavenOutput = sh(script: """
+                            cd ${projectDir}
+                            echo "Building project: ${projectDir}"
+                            mvn -f pom.xml clean package spring-boot:build-image -DskipTests=true
+                        """, returnStdout: true).trim()
+
+                        // Extract Docker image name from Maven output
+                        def imageName = (mavenOutput =~ /Successfully built image '([^']+)'/)[0][1]
+                        echo "Built Docker image: ${imageName}"
+
+                        // Store the image name in an environment variable for later use
+                        env.DOCKER_IMAGE = imageName
                     }
                 }
             }
