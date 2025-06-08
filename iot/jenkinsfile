@@ -12,10 +12,11 @@
                 'logs-service', 
                 'api-gateway'
             ], description: 'Please select project')
+             choice(name: 'JDK', choices: ['jdk-17.0.12', 'graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK')
             // Add a parameter for the cron schedule
         }
         tools {
-            jdk 'graalvm-jdk-21'
+            jdk '${params.BRANCH}'
             maven 'Maven 3.9.5' // Make sure Maven is set up in Jenkins
         }
         stages {
