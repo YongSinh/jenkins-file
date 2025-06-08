@@ -48,6 +48,7 @@ pipeline {
                sh """
                     cd "${params.PROJECT}"
                     echo "📦 Building project: ${params.PROJECT}"
+                    mvn clean install -DskipTests=true
                 """
             }
         }
