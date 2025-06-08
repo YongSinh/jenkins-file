@@ -16,7 +16,7 @@
             // Add a parameter for the cron schedule
         }
         tools {
-            jdk '${params.BRANCH}'
+            jdk '${params.JDK}'
             maven 'Maven 3.9.5' // Make sure Maven is set up in Jenkins
         }
         stages {
