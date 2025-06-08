@@ -64,14 +64,12 @@ pipeline {
                     if (!fileExists(pomFile)) {
                         error "❌ POM file not found at '${pomFile}'. Please check the repository structure."
                     }
-
                     // Build the project
                     sh """
-                        export PATH=\$JAVA_HOME/bin:\$PATH
                         cd ${projectDir}
                         echo "📦 Building project: ${projectDir}"
-                        mvn clean package -DskipTests=true
                     """
+                    //  mvn clean package -DskipTests=true
                 }
             }
         }
