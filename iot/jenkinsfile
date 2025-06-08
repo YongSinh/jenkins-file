@@ -57,20 +57,11 @@ pipeline {
 
         stage('Build Project') {
             steps {
-                script {
-                    def projectDir = "${params.PROJECT}"
-                    def pomFile = "${projectDir}/pom.xml"
-
-                    if (!fileExists(pomFile)) {
-                        error "❌ POM file not found at '${pomFile}'. Please check the repository structure."
-                    }
-                    // Build the project
-                    sh """
-                        cd ${projectDir}
-                        echo "📦 Building project: ${projectDir}"
-                    """
-                    //  mvn clean package -DskipTests=true
-                }
+               sh """
+                    cd "${projectDir}"
+                    echo "📦 Building project: ${projectDir}"
+                    mvn clean package -DskipTests=true
+                """
             }
         }
     }
