@@ -60,7 +60,6 @@ pipeline {
                sh """
                     cd "${projectDir}"
                     echo "📦 Building project: ${projectDir}"
-                    mvn clean package -DskipTests=true
                 """
             }
         }
