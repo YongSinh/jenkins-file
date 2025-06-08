@@ -42,11 +42,12 @@ pipeline {
                 }
             }
         }
+
         stage('Build Project') {
             steps {
                sh """
-                    pwd
-                    ls
+                    cd "${params.PROJECT}"
+                    echo "📦 Building project: ${params.PROJECT}"
                 """
             }
         }
