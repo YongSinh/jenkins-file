@@ -42,10 +42,11 @@
                     }
                 }
             }
-            stage('Check Environment') {
+            stage('Verify Java & Maven') {
                 steps {
                     sh '''
                         echo "JAVA_HOME is: $JAVA_HOME"
+                        export PATH=$JAVA_HOME/bin:$PATH
                         echo "Which java: $(which java)"
                         java -version
                         mvn -version
