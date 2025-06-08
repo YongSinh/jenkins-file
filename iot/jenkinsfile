@@ -58,8 +58,7 @@ pipeline {
         stage('Build Project') {
             steps {
                sh """
-                    cd "${params.PROJECT}"
-                    echo "📦 Building project: ${params.PROJECT}"
+                    pwd
                 """
             }
         }
