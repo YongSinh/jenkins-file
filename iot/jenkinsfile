@@ -42,7 +42,7 @@
                 }
             }
             stage('Build Project') {
-                               steps {
+                steps {
                     script {
                         def projectDir = "${params.PROJECT}"
                         def pomFile = "${projectDir}/pom.xml"
