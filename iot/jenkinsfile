@@ -42,16 +42,14 @@
                     }
                 }
             }
-            stages {
-                stage('Check Environment') {
-                    steps {
-                        sh '''
-                            echo "JAVA_HOME is: $JAVA_HOME"
-                            echo "Which java: $(which java)"
-                            java -version
-                            mvn -version
-                        '''
-                    }
+            stage('Check Environment') {
+                steps {
+                    sh '''
+                        echo "JAVA_HOME is: $JAVA_HOME"
+                        echo "Which java: $(which java)"
+                        java -version
+                        mvn -version
+                    '''
                 }
             }
             stage('Build Project') {
