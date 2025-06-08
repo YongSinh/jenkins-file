@@ -24,7 +24,21 @@ pipeline {
                 cleanWs()
             }
         }
-
+        stage('Validate Tools') {
+            steps {
+                script {
+                    def javaHome = tool name: "${params.JDK}", type: 'jdk'
+                    def javaPath = "${javaHome}/bin/java"
+                    
+                    if (!fileExists(javaPath)) {
+                        error("❌ JDK not found or incompatible at: ${javaPath}")
+                    }
+                    
+                    def javaVersion = sh(script: "${javaPath} -version 2>&1", returnStdout: true).trim()
+                    echo "✅ Using Java: ${javaVersion}"
+                }
+            }
+        }
         stage('Checkout Code') {
             steps {
                 script {
