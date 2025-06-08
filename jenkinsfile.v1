@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+    environment { 
+        GIT_REPO = 'https://gitlab.phillipbank.com.kh/integration/innovation-apache-camel.git'
+    }
+    parameters {
+        string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
+        choice(name: 'BRANCH', choices: ['main', 'uat'], description: 'Please select branch')
+        choice(name: 'PROJECT', choices: [
+            'errorhandling', 
+            'eda', 
+            'load-balancing', 
+            'openapi-gateway', 
+            'protocol', 
+            'schedule', 
+            'orchestration'
+        ], description: 'Please select project')
+    }
+    tools {
+        jdk 'open-jdk-17'
+        maven 'Maven 3.9.5' // Make sure Maven is set up in Jenkins
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs() // Clean the workspace before starting the build
+            }
+        }
+        stage('Checkout Code') {
+            steps {
+                script {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${params.BRANCH}"]],
+                        extensions: [
+                            [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: "${params.PROJECT}"]]]
+                        ],
+                        userRemoteConfigs: [[
+                            url: "${env.GIT_REPO}",
+                            credentialsId: 'jenkins_ci'
+                        ]]
+                    ])
+                }
+            }
+        }
+        stage('Build Project') {
+            steps {
+                script {
+                    def projectDir = "${params.PROJECT}"
+                    def pomFile = "${projectDir}/pom.xml"
+                    
+                    if (!fileExists(pomFile)) {
+                        error "POM file not found at '${pomFile}'. Please check the repository structure."
+                    }
+                    
+                    sh """
+                        cd ${projectDir}
+                        echo "Building project: ${projectDir}"
+                        mvn -f pom.xml clean package spring-boot:build-image -DskipTests=true
+                    """
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo "✅ Build completed successfully for project: ${params.PROJECT}"
+        }
+        failure {
+            echo "❌ Build failed for project: ${params.PROJECT}. Check the logs for details."
+        }
+    }
+}
