@@ -83,6 +83,14 @@ pipeline {
                 }
             }
         }
+
+        stage('Delpoy Project') {
+            steps {
+                script {
+                    echo "Delpoy Docker image: ${params.PROJECT}"
+                }
+            }
+        }
     }
 
     post {
