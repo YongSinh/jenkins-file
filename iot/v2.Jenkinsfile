@@ -2,21 +2,17 @@ pipeline {
     agent any
 
     environment { 
-        GIT_REPO   = 'https://github.com/YongSinh/agritech-iot.git'
-        APP_ENV    = 'uat'
+        GIT_REPO    = 'https://github.com/YongSinh/agritech-iot.git'
+        APP_ENV     = 'uat'
         APP_VERSION = '1.0.0'
     }
 
     parameters {
-        choice(name: 'BRANCH', choices: ['main', 'uat', 'dev'], description: 'Please select branch')
-        // Changed to extendedChoice for multi-select
-        // Standard choice parameter with comma-separated values
-        choice(
-            name: 'PROJECTS', 
-            choices: ['agritech-iot', 'logs-service', 'api-gateway', 'agritech-iot,logs-service', 'agritech-iot,api-gateway', 'logs-service,api-gateway', 'agritech-iot,logs-service,api-gateway'],
-            description: 'Select projects (comma-separated for multiple)'
-        )
-        
+        booleanParam(name: 'BUILD_AGRITECH_IOT', defaultValue: false, description: 'Build agritech-iot project')
+        booleanParam(name: 'BUILD_LOGS_SERVICE', defaultValue: false, description: 'Build logs-service project')
+        booleanParam(name: 'BUILD_API_GATEWAY', defaultValue: false, description: 'Build api-gateway project')
+        choice(name: 'BRANCH', choices: ['dev', 'uat', 'main'], description: 'Please select branch')
+        choice(name: 'PROFILE', choices: ['dev', 'uat', 'prod'], description: 'Please select profile')
         choice(name: 'JDK', choices: ['jdk-17.0.12', 'graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK version')
     }
 
@@ -31,93 +27,77 @@ pipeline {
                 cleanWs()
             }
         }
-        
+
         stage('Validate Tools') {
             steps {
                 script {
                     def javaHome = tool name: "${params.JDK}", type: 'jdk'
                     def javaPath = "${javaHome}/bin/java"
-                    
+
                     if (!fileExists(javaPath)) {
                         error("❌ JDK not found or incompatible at: ${javaPath}")
                     }
-                    
+
                     def javaVersion = sh(script: "${javaPath} -version 2>&1", returnStdout: true).trim()
                     echo "✅ Using Java: ${javaVersion}"
                 }
             }
         }
-        
+
         stage('Checkout Code') {
             steps {
-                script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${params.BRANCH}"]],
-                        extensions: [
-                            [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: "."]]]
-                        ],
-                        userRemoteConfigs: [[
-                            url: "${env.GIT_REPO}",
-                            credentialsId: 'jenkins_ci'
-                        ]]
-                    ])
-                }
+                git branch: "${params.BRANCH}",
+                    url: "${env.GIT_REPO}",
+                    credentialsId: 'jenkins_ci'
             }
         }
 
-        stage('Build Projects') {
+        stage('Build Project') {
             steps {
                 script {
-                    // Convert the comma-separated string to a list
-                    def selectedProjects = params.PROJECTS.split(',')
-                    def builtImages = [:]
-                    
-                    // Build projects in parallel
-                    def parallelStages = [:]
-                    
-                    selectedProjects.each { project ->
-                        parallelStages["Build ${project}"] = {
-                            try {
-                                def projectDir = "${project}"
-                                def pomFile = "${projectDir}/pom.xml"
-                                
-                                if (!fileExists(pomFile)) {
-                                    error "POM file not found at '${pomFile}'"
-                                }
-                                
-                                def mavenOutput = sh(script: """
-                                    cd ${projectDir}
-                                    echo "Building project: ${project}"
-                                    mvn -f pom.xml clean package spring-boot:build-image -DskipTests=true
-                                """, returnStdout: true).trim()
+                    def projects = [
+                        'agritech-iot': params.BUILD_AGRITECH_IOT,
+                        'logs-service': params.BUILD_LOGS_SERVICE,
+                        'api-gateway': params.BUILD_API_GATEWAY
+                    ]
+                    def profile = "${params.PROFILE}"
+                    def selectedProjects = projects.findAll { it.value }.keySet()
 
-                                def matcher = (mavenOutput =~ /Successfully built image '([^']+)'/)
-                                if (matcher.find()) {
-                                    def imageName = matcher[0][1]
-                                    builtImages[project] = imageName
-                                    echo "✅ Successfully built Docker image for ${project}: ${imageName}"
-                                } else {
-                                    error "❌ Could not extract image name from Maven output for ${project}"
-                                }
-                            } catch (Exception e) {
-                                error "❌ Failed to build ${project}: ${e.message}"
-                            }
-                        }
+                    if (selectedProjects.isEmpty()) {
+                        error "❌ No projects selected for build!"
                     }
-                    
-                    parallel parallelStages
-                    
-                    // Store all built images for deployment
-                    env.BUILT_IMAGES = builtImages.inspect()
-                }
-            }
-        }
 
-        stage('Delpoy Project') {
-            steps {
-                script {
-                    echo "✅ Delpoy Docker image: ${params.PROJECT}"
+                    echo "🔨 Building selected projects: ${selectedProjects.join(', ')}"
+
+                    selectedProjects.each { project ->
+                        echo "➡️ Starting build for: ${project}"
+
+                        def projectDir = "${project}"
+                        def pomFile = "${projectDir}/pom.xml"
+
+                        if (!fileExists(pomFile)) {
+                            error "❌ POM file not found at '${pomFile}'. Please check the repository structure."
+                        }
+
+                        // Run Maven build and capture output
+                        def mavenOutput = sh(script: """
+                            cd ${projectDir}
+                            echo "📦 Building project: ${projectDir}"
+                            mvn -f pom.xml clean package spring-boot:build-image -DskipTests=true -P ${profile}
+                        """, returnStdout: true).trim()
+
+                        // Extract Docker image name from Maven output
+                        def match = (mavenOutput =~ /Successfully built image '([^']+)'/)
+                        if (!match) {
+                            error "❌ Failed to extract Docker image name from Maven output for project: ${project}"
+                        }
+
+                        def imageName = match[0][1]
+                        echo "✅ Built Docker image: ${imageName}"
+
+                        // Export image name to environment variable
+                        env.DOCKER_IMAGE = imageName
+                    }
                 }
             }
         }
@@ -125,10 +105,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Build completed successfully for projects: ${params.PROJECTS}"
+            echo "✅ Build completed successfully."
         }
         failure {
-            echo "❌ Build failed for one or more projects. Check the logs for details."
+            echo "❌ Build failed. Check the logs for details."
         }
     }
 }
