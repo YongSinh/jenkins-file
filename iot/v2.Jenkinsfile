@@ -10,14 +10,13 @@ pipeline {
     parameters {
         choice(name: 'BRANCH', choices: ['main', 'uat', 'dev'], description: 'Please select branch')
         // Changed to extendedChoice for multi-select
-        extendedChoice(
+        // Standard choice parameter with comma-separated values
+        choice(
             name: 'PROJECTS', 
-            type: 'CHECKBOX', 
-            description: 'Select one or more projects to build',
-            value: 'agritech-iot,logs-service,api-gateway',
-            defaultValue: 'agritech-iot',
-            multiSelectDelimiter: ','
+            choices: ['agritech-iot', 'logs-service', 'api-gateway', 'agritech-iot,logs-service', 'agritech-iot,api-gateway', 'logs-service,api-gateway', 'agritech-iot,logs-service,api-gateway'],
+            description: 'Select projects (comma-separated for multiple)'
         )
+        
         choice(name: 'JDK', choices: ['jdk-17.0.12', 'graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK version')
     }
 
@@ -115,22 +114,10 @@ pipeline {
             }
         }
 
-        stage('Deploy Projects') {
+        stage('Delpoy Project') {
             steps {
                 script {
-                    def builtImages = evaluate(env.BUILT_IMAGES)
-                    
-                    if (!builtImages) {
-                        error "No images were built successfully"
-                    }
-                    
-                    echo "✅ The following images are ready for deployment:"
-                    builtImages.each { project, image ->
-                        echo "  - ${project}: ${image}"
-                        // Add your deployment logic here for each image
-                        // Example: 
-                        // sh "docker push ${image}"
-                    }
+                    echo "✅ Delpoy Docker image: ${params.PROJECT}"
                 }
             }
         }
