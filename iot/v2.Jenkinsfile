@@ -101,6 +101,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Delpoy Project') {
+            steps {
+                script {
+                    def composeFile = "docker-compose.yml"
+            
+                    // Check if docker-compose file exists
+                    if (!fileExists(composeFile)) {
+                        error "❌ docker-compose.yml not found in workspace."
+                    }
+
+                    // Print confirmation
+                    echo "📦 Starting Docker Compose deployment..."
+                    
+                    // Stop and remove previous containers
+                    sh "docker-compose down"
+
+                    // Deploy using docker-compose
+                    sh "docker-compose up -d --build"
+
+                    echo "✅ Docker Compose deployment completed."
+                }
+            }
+        }
     }
 
     post {
