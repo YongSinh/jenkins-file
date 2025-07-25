@@ -37,7 +37,7 @@ pipeline {
                     // Build the Docker image
                     sh """
                         cd ${projectDir}
-                        docker build -t ${imageName} .
+                        docker build -t ${imageName} . | tee docker-build.log
                     """
 
                     env.DOCKER_IMAGE = imageName
