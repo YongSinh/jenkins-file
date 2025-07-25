@@ -48,12 +48,12 @@ pipeline {
         stage('Deploy Project') {
             steps {
                 script {
-                    echo "🚀 Running Docker container from image: ${env.DOCKER_IMAGE}"
+                    echo "🚀 Running Docker container from image: react-app-iot:1.0.0"
 
                     // Stop and remove existing container if it exists (optional cleanup)
                     sh """
                         docker rm -f react-app-iot || true
-                        docker run -d --name react-app-iot -p 5173:80 ${env.DOCKER_IMAGE}
+                        docker run -d --name react-app-iot -p 5173:80 react-app-iot:1.0.0
                     """
                 }
             }
