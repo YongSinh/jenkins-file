@@ -26,24 +26,24 @@ pipeline {
             }
         }
 
-        // stage('Build Project') {
-        //     steps {
-        //         script {
-        //             def projectDir = "iot-app-react"
-        //             def imageName = "react-app-iot:1.0.0"
+        stage('Build Project') {
+            steps {
+                script {
+                    def projectDir = "iot-app-react"
+                    def imageName = "react-app-iot:1.0.0"
 
-        //             echo "🔧 Building Docker image: ${imageName}"
+                    echo "🔧 Building Docker image: ${imageName}"
 
-        //             // Build the Docker image
-        //             sh """
-        //                 cd ${projectDir}
-        //                 docker build -t ${imageName} . | tee docker-build.log
-        //             """
+                    // Build the Docker image
+                    sh """
+                        cd ${projectDir}
+                        docker build -t ${imageName} . | tee docker-build.log
+                    """
 
-        //             env.DOCKER_IMAGE = imageName
-        //         }
-        //     }
-        // }
+                    env.DOCKER_IMAGE = imageName
+                }
+            }
+        }
 
         stage('Deploy Project') {
             steps {
