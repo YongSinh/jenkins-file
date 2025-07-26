@@ -53,7 +53,7 @@ pipeline {
                     // Stop and remove existing container if it exists (optional cleanup)
                     sh """
                         docker rm -f react-app-iot || true
-                        docker run -d --name react-app-iot -p 5173:80 react-app-iot:1.0.0
+                        docker run -d --name react-app-iot -p 5173:443 react-app-iot:1.0.0
                     """
                 }
             }
