@@ -10,7 +10,7 @@ pipeline {
     parameters {
         choice(name: 'BRANCH', choices: ['dev', 'uat', 'main'], description: 'Please select branch')
         choice(name: 'PROJECT', choices: ['agritech-iot', 'logs-service', 'api-gateway'], description: 'Please select project')
-        choice(name: 'JDK', choices: ['jdk-17.0.12', 'graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK version')
+        choice(name: 'JDK', choices: ['graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK version')
     }
 
     tools {
