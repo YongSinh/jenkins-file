@@ -79,28 +79,36 @@ pipeline {
                             error "❌ POM file not found at '${pomFile}'. Please check the repository structure."
                         }
 
-                        // Run Maven build and capture output
-                        def mavenOutput = sh(script: """
-                            cd ${projectDir}
+                        dir(projectDir) {
                             echo "📦 Building project: ${projectDir}"
-                            mvn -f pom.xml clean package spring-boot:build-image -DskipTests=true -P ${profile}
-                        """, returnStdout: true).trim()
 
-                        // Extract Docker image name from Maven output
-                        def match = (mavenOutput =~ /Successfully built image '([^']+)'/)
-                        if (!match) {
-                            error "❌ Failed to extract Docker image name from Maven output for project: ${project}"
+                            // Run Maven with live logs and capture output in a file
+                            sh """
+                                mvn -f pom.xml clean package spring-boot:build-image \
+                                    -DskipTests=true -P ${profile} | tee maven-build.log
+                            """
+
+                            // Now parse the log safely
+                            def match = sh(
+                                script: "grep \"Successfully built image\" maven-build.log || true",
+                                returnStdout: true
+                            ).trim()
+
+                            if (!match) {
+                                error "❌ Failed to extract Docker image name for project: ${project}"
+                            }
+
+                            def imageName = (match =~ /'([^']+)'/)[0][1]
+                            echo "✅ Built Docker image: ${imageName}"
+
+                            // Save image name for later stages
+                            env.DOCKER_IMAGE = imageName
                         }
-
-                        def imageName = match[0][1]
-                        echo "✅ Built Docker image: ${imageName}"
-
-                        // Export image name to environment variable
-                        env.DOCKER_IMAGE = imageName
                     }
                 }
             }
         }
+
 
         stage('Delpoy Project') {
             steps {
