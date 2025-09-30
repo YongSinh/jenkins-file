@@ -13,7 +13,7 @@ pipeline {
         booleanParam(name: 'BUILD_API_GATEWAY', defaultValue: false, description: 'Build api-gateway project')
         choice(name: 'BRANCH', choices: ['dev', 'uat', 'main'], description: 'Please select branch')
         choice(name: 'PROFILE', choices: ['dev', 'uat', 'prod'], description: 'Please select profile')
-        choice(name: 'JDK', choices: ['jdk-17.0.12', 'graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK version')
+        choice(name: 'JDK', choices: ['graalvm-jdk-21', 'graalvm-jdk-24'], description: 'Please select JDK version')
     }
 
     tools {
